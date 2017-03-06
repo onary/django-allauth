@@ -18,6 +18,7 @@ from ..utils import (
     get_request_param,
     get_user_model,
     import_callable,
+    import_attribute,
     valid_email_or_none,
 )
 from .adapter import get_adapter
@@ -171,10 +172,14 @@ def complete_signup(request, user, email_verification, success_url,
                                 request=request,
                                 user=user,
                                 **signal_kwargs)
+
+    redirect_url = import_callable(getattr(settings, "ACCOUNT_SIGNUP_REDIRECT",
+                                           default_signup_redirect))(success_url)
+
     return perform_login(request, user,
                          email_verification=email_verification,
                          signup=True,
-                         redirect_url=success_url,
+                         redirect_url=redirect_url,
                          signal_kwargs=signal_kwargs)
 
 
@@ -422,3 +427,7 @@ def url_str_to_user_pk(s):
     except ValidationError:
         pk = base36_to_int(s)
     return pk
+
+
+def default_signup_redirect(success_url):
+    return success_url
